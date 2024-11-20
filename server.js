@@ -10,6 +10,7 @@ app.post(
   express.raw({ type: "image/*", limit: "5mb" }),
   async (req, res) => {
     try {
+      // First call CarTypeDetector model to identify type of car
       let azureResponse = await fetch(
         `https://${process.env.CUSTOM_VISION_ENDPOINT}/customvision/v3.0/Prediction/${process.env.TYPE_PROJECT_ID}/classify/iterations/CarTypeDetector/image`,
         {
@@ -33,6 +34,7 @@ app.post(
         "Car Type Detector's response: " + JSON.stringify(data, null, 2)
       );
 
+      // Iterator over all labels and find the one with highest probability
       let carType = null;
       let probability = 0;
       data.predictions.forEach((label) => {
@@ -42,6 +44,7 @@ app.post(
         }
       });
 
+      // Call CarBrandDetector model to identify brand of car
       azureResponse = await fetch(
         `https://${process.env.CUSTOM_VISION_ENDPOINT}/customvision/v3.0/Prediction/${process.env.BRAND_PROJECT_ID}/detect/iterations/CarBrandDetector/image`,
         {
@@ -65,6 +68,7 @@ app.post(
         "Car Brand Detector's response: " + JSON.stringify(data, null, 2)
       );
 
+      // Iterator over all labels and find the one with highest probability
       let carBrand = null;
       probability = 0;
       data.predictions.forEach((label) => {
@@ -74,6 +78,7 @@ app.post(
         }
       });
 
+      // Set data about car in response
       res.json({
         type: carType || "Unknown",
         brand: carBrand || "Unknown",
